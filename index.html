@@ -1,181 +1,94 @@
+
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quotation & Udhar Khata - Apna AI Dost</title>
+    <title>Apna AI Dost</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: #0f172a; color: #f8fafc; padding: 15px; }
-        .container { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        h2 { text-align: center; color: #38bdf8; margin-bottom: 5px; }
-        p.subtitle { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #cbd5e1; font-weight: 600; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 1rem; outline: none; }
-        .quick-items { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .chip { background: #334155; color: #38bdf8; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; border: 1px solid #0284c7; font-weight: 600; }
-        .item-row { display: flex; gap: 8px; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
-        .btn-add { background: #0284c7; color: white; }
-        
-        /* Social Media Buttons Styling */
-        .social-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .btn-whatsapp { background: #22c55e; color: white; flex: 1; min-width: 140px; margin-top: 0; }
-        .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: white; flex: 1; min-width: 140px; margin-top: 0; }
-        .btn-facebook { background: #1877f2; color: white; flex: 1; min-width: 140px; margin-top: 0; }
-        
-        .btn-print { background: #0ea5e9; color: white; margin-top: 10px; }
-        .btn-back { background: #475569; color: white; margin-top: 10px; text-decoration: none; display: block; text-align: center; line-height: 44px; border-radius: 8px; }
-        .total-box { text-align: right; font-size: 1.3rem; font-weight: bold; margin-top: 15px; color: #38bdf8; border-top: 1px solid #334155; padding-top: 12px; }
-        
-        @media print {
-            body { background: white; color: black; padding: 0; }
-            .container { border: none; background: white; color: black; width: 100%; max-width: 100%; box-shadow: none; }
-            input { border: none; background: transparent; color: black; padding: 4px; font-size: 1.1rem; }
-            .btn, .btn-back, .quick-items, .chip, label[for="quick"], .social-buttons { display: none !important; }
-            h2 { color: black; }
-            p.subtitle { color: #555; }
-            .total-box { color: black; border-top: 2px solid #000; }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .top-bar { width: 100%; max-width: 500px; margin-bottom: 12px; display: flex; justify-content: flex-end; }
+        .tool-btn { background-color: #16a34a; color: #ffffff; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+        .chat-container { width: 100%; max-width: 500px; height: 75vh; background-color: #1e293b; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #334155; }
+        .chat-header { background-color: #0284c7; color: #ffffff; padding: 16px 20px; text-align: center; font-size: 1.2rem; font-weight: 600; }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
+        .bot-message { background-color: #334155; color: #f8fafc; align-self: flex-start; }
+        .user-message { background-color: #0284c7; color: #ffffff; align-self: flex-end; }
+        .input-area { display: flex; padding: 12px; background-color: #0f172a; gap: 10px; border-top: 1px solid #334155; }
+        .input-area input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; background-color: #1e293b; color: #ffffff; outline: none; }
+        .input-area button { background-color: #0284c7; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h2>📄 Quotation & Udhar Khata</h2>
-    <p class="subtitle">Chhote Dukandaron Aur Wholesalers Ke Liye Aasan Bill Maker</p>
-    
-    <div class="form-group">
-        <label>Grahak Ka Naam (Customer Name):</label>
-        <input type="text" id="custName" placeholder="Grahak ka naam likhein">
-    </div>
-    
-    <div class="form-group">
-        <label>WhatsApp / Mobile Number:</label>
-        <input type="tel" id="custPhone" placeholder="10 digit Mobile number">
+    <div class="top-bar">
+        <a href="quotation.html" class="tool-btn">📄 Quotation Maker</a>
     </div>
 
-    <div class="form-group">
-        <label>Tareekh (Date):</label>
-        <input type="date" id="quoteDate">
-    </div>
-
-    <hr style="border-color: #334155; margin: 15px 0;">
-
-    <label id="quick">Quick Items (Click Karke Add Karein):</label>
-    <div class="quick-items">
-        <span class="chip" onclick="addQuickItem('General Goods / Maal', 1, 500)">+ Goods (₹500)</span>
-        <span class="chip" onclick="addQuickItem('Packing Charge', 1, 100)">+ Packing (₹100)</span>
-        <span class="chip" onclick="addQuickItem('Transport / Bhada', 1, 200)">+ Bhada (₹200)</span>
-        <span class="chip" onclick="addQuickItem('Labour Charge', 1, 150)">+ Labour (₹150)</span>
-    </div>
-
-    <label>Samaan / Sewa (Items):</label>
-    <div id="itemList">
-        <div class="item-row">
-            <input type="text" placeholder="Item Name" style="flex: 2;" class="item-name">
-            <input type="number" placeholder="Qty" style="flex: 1;" class="item-qty" oninput="calculateTotal()">
-            <input type="number" placeholder="Rate (₹)" style="flex: 1;" class="item-price" oninput="calculateTotal()">
+    <div class="chat-container">
+        <div class="chat-header">Apna AI Dost</div>
+        <div class="chat-box" id="chatBox">
+            <div class="message bot-message">Namaste! Main aapka Apna AI Dost hoon. Main aapki kya madad kar sakta hoon?</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Apna message likhein..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Bhejen</button>
         </div>
     </div>
 
-    <button class="btn btn-add" onclick="addItem()">+ Naya Item Jodein</button>
-
-    <div class="total-box">
-        Kul Rashi (Total): ₹<span id="grandTotal">0</span>
-    </div>
-
-    <!-- Social Share Buttons -->
-    <div class="social-buttons">
-        <button class="btn btn-whatsapp" onclick="sendWhatsAppReminder()">📲 WhatsApp</button>
-        <button class="btn btn-instagram" onclick="shareInstagram()">📸 Instagram</button>
-        <button class="btn btn-facebook" onclick="shareFacebook()">📘 Facebook</button>
-    </div>
-
-    <button class="btn btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
-    <a href="index.html" class="btn-back">← Main AI Chat Par Jayein</a>
-</div>
-
-<script>
-    document.getElementById('quoteDate').valueAsDate = new Date();
-
-    function addItem() {
-        let div = document.createElement('div');
-        div.className = 'item-row';
-        div.innerHTML = `
-            <input type="text" placeholder="Item Name" style="flex: 2;" class="item-name">
-            <input type="number" placeholder="Qty" style="flex: 1;" class="item-qty" oninput="calculateTotal()">
-            <input type="number" placeholder="Rate (₹)" style="flex: 1;" class="item-price" oninput="calculateTotal()">
-        `;
-        document.getElementById('itemList').appendChild(div);
-    }
-
-    function addQuickItem(name, qty, price) {
-        let div = document.createElement('div');
-        div.className = 'item-row';
-        div.innerHTML = `
-            <input type="text" value="${name}" style="flex: 2;" class="item-name">
-            <input type="number" value="${qty}" style="flex: 1;" class="item-qty" oninput="calculateTotal()">
-            <input type="number" value="${price}" style="flex: 1;" class="item-price" oninput="calculateTotal()">
-        `;
-        document.getElementById('itemList').appendChild(div);
-        calculateTotal();
-    }
-
-    function calculateTotal() {
-        let qtys = document.getElementsByClassName('item-qty');
-        let prices = document.getElementsByClassName('item-price');
-        let total = 0;
-        
-        for(let i = 0; i < qtys.length; i++) {
-            let q = parseFloat(qtys[i].value) || 0;
-            let p = parseFloat(prices[i].value) || 0;
-            total += (q * p);
-        }
-        
-        document.getElementById('grandTotal').innerText = total;
-    }
-
-    function getMessageText() {
-        let name = document.getElementById('custName').value.trim() || "Grahak";
-        let total = document.getElementById('grandTotal').innerText;
-        return `Namaste ${name} ji! Aapka kul bill / bakaya ₹${total} hai. Kripya iska bhugtan jald se jald karein. Dhanyawad!`;
-    }
-
-    function sendWhatsAppReminder() {
-        let phone = document.getElementById('custPhone').value.trim();
-        if(!phone) {
-            alert("Kripya pehle Grahak ka WhatsApp / Mobile Number likhein!");
-            return;
+    <script>
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
         }
 
-        let message = getMessageText();
-        let encodedMessage = encodeURIComponent(message);
-        
-        let cleanPhone = phone.replace(/[^0-9]/g, '');
-        if(cleanPhone.length === 10) {
-            cleanPhone = "91" + cleanPhone;
+        function getBotResponse(msg) {
+            let text = msg.toLowerCase();
+            
+            if (text.includes("hi") || text.includes("hello") || text.includes("namaste")) {
+                return "Namaste! Aap kaise hain? Main aapki business ya coding mein kya madad kar sakta hoon?";
+            } else if (text.includes("good morning") || text.includes("morning")) {
+                return "Good Morning! Aapka din shubh ho. Aaj kya khas kaam kar rahe hain?";
+            } else if (text.includes("business") || text.includes("vyapar") || text.includes("kaam") || text.includes("madad")) {
+                return "Haan bilkul! Main aapke business, export, quotation maker aur marketing mein poori madad kar sakta hoon. Aap apna sawal puchein!";
+            } else if (text.includes("quotation") || text.includes("bill") || text.includes("rate")) {
+                return "Aap upar diye gaye '📄 Quotation Maker' button par click karke aasani se quotation ya bill bana sakte hain!";
+            } else if (text.includes("kaise ho") || text.includes("kaisa hai")) {
+                return "Main bilkul badhiya hoon! Aap batayein, aapka kaam kaisa chal raha hai?";
+            } else if (text.includes("thanks") || text.includes("dhanyawad") || text.includes("shukriya")) {
+                return "Aapka bahut bahut swagat hai! Mujhase kabhi bhi sawal pooch sakte hain.";
+            } else {
+                return "Bahut achha sawal hai! Main is par aapki poori madad karne ke liye tayar hoon. Batayein isme aapko kya jaankari chahiye?";
+            }
         }
 
-        window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
-    }
-
-    function shareInstagram() {
-        let text = getMessageText();
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text);
-            alert("Bill message copy ho gaya hai! Ab Instagram app khul raha hai, wahan DM mein paste kar dein.");
+        function sendMessage() {
+            let input = document.getElementById("userInput");
+            let message = input.value.trim();
+            if (message !== "") {
+                let chatBox = document.getElementById("chatBox");
+                
+                // Add User Message
+                let userDiv = document.createElement("div");
+                userDiv.className = "message user-message";
+                userDiv.innerText = message;
+                chatBox.appendChild(userDiv);
+                
+                input.value = "";
+                chatBox.scrollTop = chatBox.scrollHeight;
+                
+                // Add AI Smart Response
+                setTimeout(() => {
+                    let botDiv = document.createElement("div");
+                    botDiv.className = "message bot-message";
+                    botDiv.innerText = getBotResponse(message);
+                    chatBox.appendChild(botDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }, 800);
+            }
         }
-        window.open(`https://www.instagram.com/`, '_blank');
-    }
-
-    function shareFacebook() {
-        let text = getMessageText();
-        let encodedText = encodeURIComponent(text);
-        window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodedText}`, '_blank');
-    }
-</script>
-
+    </script>
 </body>
 </html>
