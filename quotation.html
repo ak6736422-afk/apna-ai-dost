@@ -1,65 +1,104 @@
-
-<!-- Apna AI Dost - Quotation Tool Link -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apna AI Dost</title>
+    <title>Quotation Maker - Apna AI Dost</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .top-bar { width: 100%; max-width: 500px; margin-bottom: 12px; display: flex; justify-content: flex-end; }
-        .tool-btn { background-color: #16a34a; color: #ffffff; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
-        .chat-container { width: 100%; max-width: 500px; height: 75vh; background-color: #1e293b; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #334155; }
-        .chat-header { background-color: #0284c7; color: #ffffff; padding: 16px 20px; text-align: center; font-size: 1.2rem; font-weight: 600; }
-        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
-        .bot-message { background-color: #334155; color: #f8fafc; align-self: flex-start; }
-        .user-message { background-color: #0284c7; color: #ffffff; align-self: flex-end; }
-        .input-area { display: flex; padding: 12px; background-color: #0f172a; gap: 10px; border-top: 1px solid #334155; }
-        .input-area input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; background-color: #1e293b; color: #ffffff; outline: none; }
-        .input-area button { background-color: #0284c7; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; padding: 15px; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+        h2 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #cbd5e1; }
+        input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 1rem; }
+        .item-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .item-row input { font-size: 0.9rem; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        .btn-add { background: #0284c7; color: white; }
+        .btn-print { background: #16a34a; color: white; margin-top: 15px; }
+        .btn-back { background: #475569; color: white; margin-top: 10px; text-decoration: none; display: block; text-align: center; line-height: 40px; border-radius: 6px; }
+        .total-box { text-align: right; font-size: 1.2rem; font-weight: bold; margin-top: 15px; color: #38bdf8; border-top: 1px solid #334155; padding-top: 10px; }
+        
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            .container { border: none; background: white; color: black; width: 100%; max-width: 100%; }
+            input { border: none; background: transparent; color: black; padding: 2px; }
+            .btn, .btn-back { display: none; }
+            h2 { color: black; }
+            .total-box { color: black; }
+        }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <a href="quotation.html" class="tool-btn">📄 Quotation Maker</a>
+
+<div class="container">
+    <h2>Quotation Maker</h2>
+    
+    <div class="form-group">
+        <label>Grahak Ka Naam (Customer Name):</label>
+        <input type="text" id="custName" placeholder="Naam likhein">
+    </div>
+    
+    <div class="form-group">
+        <label>Mobile Number:</label>
+        <input type="tel" id="custPhone" placeholder="Mobile number likhein">
     </div>
 
-    <div class="chat-container">
-        <div class="chat-header">Apna AI Dost</div>
-        <div class="chat-box" id="chatBox">
-            <div class="message bot-message">Namaste! Main aapka Apna AI Dost hoon. Main aapki kya madad kar sakta hoon?</div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Apna message likhein...">
-            <button onclick="sendMessage()">Bhejen</button>
+    <div class="form-group">
+        <label>Tareekh (Date):</label>
+        <input type="date" id="quoteDate">
+    </div>
+
+    <hr style="border-color: #334155; margin: 15px 0;">
+
+    <label>Samaan / Sewa (Items):</label>
+    <div id="itemList">
+        <div class="item-row">
+            <input type="text" placeholder="Item Name" style="flex: 2;" class="item-name">
+            <input type="number" placeholder="Qty" style="flex: 1;" class="item-qty" oninput="calculateTotal()">
+            <input type="number" placeholder="Rate (₹)" style="flex: 1;" class="item-price" oninput="calculateTotal()">
         </div>
     </div>
-    <script>
-        function sendMessage() {
-            let input = document.getElementById("userInput");
-            let message = input.value.trim();
-            if (message !== "") {
-                let chatBox = document.getElementById("chatBox");
-                let userDiv = document.createElement("div");
-                userDiv.className = "message user-message";
-                userDiv.innerText = message;
-                chatBox.appendChild(userDiv);
-                input.value = "";
-                chatBox.scrollTop = chatBox.scrollHeight;
-                setTimeout(() => {
-                    let botDiv = document.createElement("div");
-                    botDiv.className = "message bot-message";
-                    botDiv.innerText = "Shukriya! Main jald hi aapke query par kaam karunga.";
-                    chatBox.appendChild(botDiv);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }, 1000);
-            }
+
+    <button class="btn btn-add" onclick="addItem()">+ Naya Item Jodein</button>
+
+    <div class="total-box">
+        Kul Rashi (Total): ₹<span id="grandTotal">0</span>
+    </div>
+
+    <button class="btn btn-print" onclick="window.print()">Print / Save PDF</button>
+    <a href="index.html" class="btn-back">← Main Website Par Jayein</a>
+</div>
+
+<script>
+    document.getElementById('quoteDate').valueAsDate = new Date();
+
+    function addItem() {
+        let div = document.createElement('div');
+        div.className = 'item-row';
+        div.innerHTML = `
+            <input type="text" placeholder="Item Name" style="flex: 2;" class="item-name">
+            <input type="number" placeholder="Qty" style="flex: 1;" class="item-qty" oninput="calculateTotal()">
+            <input type="number" placeholder="Rate (₹)" style="flex: 1;" class="item-price" oninput="calculateTotal()">
+        `;
+        document.getElementById('itemList').appendChild(div);
+    }
+
+    function calculateTotal() {
+        let qtys = document.getElementsByClassName('item-qty');
+        let prices = document.getElementsByClassName('item-price');
+        let total = 0;
+        
+        for(let i = 0; i < qtys.length; i++) {
+            let q = parseFloat(qtys[i].value) || 0;
+            let p = parseFloat(prices[i].value) || 0;
+            total += (q * p);
         }
-    </script>
+        
+        document.getElementById('grandTotal').innerText = total;
+    }
+</script>
+
 </body>
 </html>
-
-    
