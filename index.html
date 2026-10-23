@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apna AI Dost</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .chat-container { width: 100%; max-width: 500px; height: 80vh; background-color: #1e293b; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #334155; }
+        .chat-header { background-color: #0284c7; color: #ffffff; padding: 16px 20px; text-align: center; font-size: 1.2rem; font-weight: 600; }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
+        .bot-message { background-color: #334155; color: #f8fafc; align-self: flex-start; }
+        .user-message { background-color: #0284c7; color: #ffffff; align-self: flex-end; }
+        .input-area { display: flex; padding: 12px; background-color: #0f172a; gap: 10px; border-top: 1px solid #334155; }
+        .input-area input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; background-color: #1e293b; color: #ffffff; outline: none; }
+        .input-area button { background-color: #0284c7; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Apna AI Dost</div>
+        <div class="chat-box" id="chatBox">
+            <div class="message bot-message">Namaste! Main aapka Apna AI Dost hoon. Main aapki kya madad kar sakta hoon?</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Apna message likhein...">
+            <button onclick="sendMessage()">Bhejen</button>
+        </div>
+    </div>
+    <script>
+        function sendMessage() {
+            let input = document.getElementById("userInput");
+            let message = input.value.trim();
+            if (message !== "") {
+                let chatBox = document.getElementById("chatBox");
+                let userDiv = document.createElement("div");
+                userDiv.className = "message user-message";
+                userDiv.innerText = message;
+                chatBox.appendChild(userDiv);
+                input.value = "";
+                chatBox.scrollTop = chatBox.scrollHeight;
+                setTimeout(() => {
+                    let botDiv = document.createElement("div");
+                    botDiv.className = "message bot-message";
+                    botDiv.innerText = "Shukriya! Main jald hi aapke query par kaam karunga.";
+                    chatBox.appendChild(botDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
