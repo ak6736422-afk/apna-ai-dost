@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="hi">
 <head>
@@ -7,10 +8,9 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;background:#eef0f7;color:#1c1f33}
-header{background:#4338ca;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+header{background:#4338ca;color:#fff;padding:12px 16px}
 header h1{font-size:19px;margin:0}
 button{font:inherit;cursor:pointer}
-.keybtn{background:transparent;border:1px solid #c7c9ff;color:#fff;border-radius:20px;padding:6px 14px}
 nav{display:flex;background:#312e9e}
 nav button{flex:1;padding:12px;border:0;background:transparent;color:#c9cbff;font-weight:600;border-bottom:3px solid transparent}
 nav button.on{color:#fff;border-bottom-color:#60a5fa}
@@ -28,7 +28,7 @@ main{max-width:720px;margin:0 auto;padding:12px}
 #att{font-size:13px;color:#4338ca;margin-top:6px;min-height:18px}
 .card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px}
 label{display:block;font-size:12px;font-weight:700;color:#5b5f85;margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
-input.f,select.f{width:100%;padding:10px;border:1px solid #cfd3ea;border-radius:10px;font:inherit}
+input.f{width:100%;padding:10px;border:1px solid #cfd3ea;border-radius:10px;font:inherit}
 .row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px}
 .row input{min-width:0;padding:9px;border:1px solid #cfd3ea;border-radius:8px;font:inherit}
 .btn{padding:10px 16px;border-radius:10px;border:0;background:#4f46e5;color:#fff;font-weight:600}
@@ -38,21 +38,18 @@ input.f,select.f{width:100%;padding:10px;border:1px solid #cfd3ea;border-radius:
 #quote table{width:100%;border-collapse:collapse;margin:12px 0}
 #quote th,#quote td{border:1px solid #cfd3ea;padding:7px;text-align:left;font-size:14px}
 #quote td.n,#quote th.n{text-align:right}
-dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,420px)}
-dialog::backdrop{background:rgba(0,0,0,.5)}
-.hint{font-size:12px;color:#5b5f85;margin-top:6px}
-@media print{header,nav,.noprint,#tab-chat{display:none!important}body{background:#fff}#quote{box-shadow:none}}
+@media print{header,nav,.noprint,#tab-chat{display:none!important}body{background:#fff}}
 </style>
 </head>
 <body>
-<header class="noprint"><h1>🤖 Apna AI Dost</h1><button class="keybtn" id="keyOpen">🔑 API Key</button></header>
+<header class="noprint"><h1>🤖 Apna AI Dost</h1></header>
 <nav class="noprint">
   <button class="on" data-t="chat">💬 AI Assistant</button>
   <button data-t="quote">🧾 Quotation Maker</button>
 </nav>
 <main>
 <section class="tab on" id="tab-chat">
-  <div id="chat"><div class="m b">👋 <b>नमस्ते! मैं आपका Apna AI Dost हूँ।</b><br>व्यापार, एक्सपोर्ट, फ़ोटो या PDF के बारे में कुछ भी पूछिए। पहली बार ऊपर 🔑 API Key दबाकर अपनी key डालिए।</div></div>
+  <div id="chat"><div class="m b">👋 <b>नमस्ते! मैं आपका Apna AI Dost हूँ।</b><br>व्यापार, एक्सपोर्ट, फ़ोटो या PDF के बारे में कुछ भी पूछिए।</div></div>
   <div id="att"></div>
   <div class="bar">
     <button class="ic" id="camBtn" title="फ़ोटो">📷</button>
@@ -84,31 +81,15 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </section>
 </main>
 
-<dialog id="dlg">
-  <h3 style="margin:0 0 4px">API Key सेट करें</h3>
-  <label>GEMINI API KEY (AQ… या AIza…)</label>
-  <input class="f" id="keyIn" type="password" placeholder="AQ.Ab… या AIzaSy…" autocomplete="off">
-  <label>मॉडल</label>
-  <input class="f" id="modelIn" placeholder="gemini-3.8-flash">
-  <div class="hint">Key सिर्फ़ आपके फ़ोन के browser में सेव होती है। किसी को दिखाएँ या शेयर न करें।</div>
-  <div class="btns" style="justify-content:flex-end"><button class="btn g" id="keyCancel">रद्द करें</button><button class="btn" id="keySave">सुरक्षित करें</button></div>
-</dialog>
-
 <script>
+const APPS_URL="PASTE_YOUR_URL_HERE";
 const $=id=>document.getElementById(id);
-const store={get(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-const SYS="आप 'Apna AI Dost' हैं, एक भारतीय छोटे व्यापारी और एक्सपोर्टर के सहायक। यूज़र जिस भाषा में लिखे (हिंदी, Hinglish या English) उसी में जवाब दें। जवाब सरल, छोटे और काम के हों।";
 let history=[], pending=null;
 
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.id==="tab-"+b.dataset.t));
 });
-
-const dlg=$("dlg");
-$("keyOpen").onclick=()=>{$("keyIn").value=store.get("gk");$("modelIn").value=store.get("gm")||"gemini-3.8-flash";dlg.showModal()};
-$("keyCancel").onclick=()=>dlg.close();
-$("keySave").onclick=()=>{store.set("gk",$("keyIn").value.trim());store.set("gm",$("modelIn").value.trim()||"gemini-3.8-flash");dlg.close();add("✅ Key सेव हो गई। अब सवाल पूछिए।","b")};
 
 function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
 function add(t,cls,html){const d=document.createElement("div");d.className="m "+cls;if(html)d.innerHTML=html;else d.textContent=t;$("chat").appendChild(d);$("chat").scrollTop=1e9;return d}
@@ -118,7 +99,7 @@ $("camBtn").onclick=()=>$("camIn").click();
 $("pdfBtn").onclick=()=>$("fileIn").click();
 function pick(e){
   const f=e.target.files[0];if(!f)return;
-  if(f.size>15*1024*1024){add("फ़ाइल 15MB से बड़ी है। छोटी फ़ाइल चुनें।","b err");return}
+  if(f.size>8*1024*1024){add("फ़ाइल 8MB से बड़ी है। छोटी फ़ाइल चुनें।","b err");return}
   const r=new FileReader();
   r.onload=()=>{pending={mimeType:f.type||"application/pdf",data:r.result.split(",")[1]};$("att").textContent="📎 "+f.name+" जुड़ गई। अब सवाल लिखकर भेजें।"};
   r.readAsDataURL(f);e.target.value="";
@@ -128,9 +109,6 @@ $("camIn").onchange=pick;$("fileIn").onchange=pick;
 async function send(){
   const text=$("msg").value.trim();
   if(!text&&!pending)return;
-  const key=store.get("gk");
-  if(!key){add("पहले ऊपर 🔑 API Key दबाकर अपनी key डालिए।","b err");return}
-  const model=store.get("gm")||"gemini-3.8-flash";
   const parts=[];
   if(pending)parts.push({inlineData:pending});
   parts.push({text:text||"इस फ़ाइल/फ़ोटो को समझाइए और ज़रूरी बातें बताइए।"});
@@ -139,20 +117,16 @@ async function send(){
   const wait=add("सोच रहा हूँ…","b");
   const contents=[...history,{role:"user",parts}];
   try{
-    const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-goog-api-key":key},
-      body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents})
-    });
+    const res=await fetch(APPS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({contents})});
     const j=await res.json();
-    if(!res.ok)throw new Error((j.error&&j.error.message)||("HTTP "+res.status));
-    const reply=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts||[]).map(p=>p.text||"").join("")||"(खाली जवाब मिला)";
+    if(j.error)throw new Error(j.error);
+    const reply=j.reply||"(खाली जवाब मिला)";
     wait.innerHTML=md(reply);
     history.push({role:"user",parts:[{text:text||"(फ़ाइल)"}]},{role:"model",parts:[{text:reply}]});
     history=history.slice(-20);
   }catch(err){
     wait.className="m b err";
-    wait.textContent="❌ त्रुटि: "+err.message+(/key|API|auth|permission/i.test(err.message)?"\nKey या मॉडल का नाम जाँचिए (🔑 बटन)।":"");
+    wait.textContent="❌ त्रुटि: "+err.message;
   }
   $("chat").scrollTop=1e9;
 }
