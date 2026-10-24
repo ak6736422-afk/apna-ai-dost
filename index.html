@@ -1,127 +1,191 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apna AI Dost</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .chat-container { height: calc(100vh - 200px); }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apna AI Dost</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;background:#eef0f7;color:#1c1f33}
+header{background:#4338ca;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:19px;margin:0}
+button{font:inherit;cursor:pointer}
+.keybtn{background:transparent;border:1px solid #c7c9ff;color:#fff;border-radius:20px;padding:6px 14px}
+nav{display:flex;background:#312e9e}
+nav button{flex:1;padding:12px;border:0;background:transparent;color:#c9cbff;font-weight:600;border-bottom:3px solid transparent}
+nav button.on{color:#fff;border-bottom-color:#60a5fa}
+main{max-width:720px;margin:0 auto;padding:12px}
+.tab{display:none}.tab.on{display:block}
+#chat{background:#fff;border-radius:16px;padding:12px;min-height:55vh;max-height:62vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.m{max-width:88%;padding:10px 14px;border-radius:14px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word}
+.u{align-self:flex-end;background:#4f46e5;color:#fff}
+.b{align-self:flex-start;background:#f3f4fb;border:1px solid #e1e3f2}
+.err{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.bar{display:flex;gap:8px;margin-top:10px;align-items:center}
+.bar input[type=text]{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid #cfd3ea;font:inherit}
+.ic{width:44px;height:44px;border-radius:12px;border:1px solid #cfd3ea;background:#fff;font-size:20px}
+.send{width:48px;height:44px;border-radius:12px;border:0;background:#4f46e5;color:#fff;font-size:18px}
+#att{font-size:13px;color:#4338ca;margin-top:6px;min-height:18px}
+.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:700;color:#5b5f85;margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+input.f,select.f{width:100%;padding:10px;border:1px solid #cfd3ea;border-radius:10px;font:inherit}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px}
+.row input{min-width:0;padding:9px;border:1px solid #cfd3ea;border-radius:8px;font:inherit}
+.btn{padding:10px 16px;border-radius:10px;border:0;background:#4f46e5;color:#fff;font-weight:600}
+.btn.g{background:#e4e6f7;color:#312e9e}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+#quote{background:#fff;border-radius:16px;padding:18px;overflow-x:auto}
+#quote table{width:100%;border-collapse:collapse;margin:12px 0}
+#quote th,#quote td{border:1px solid #cfd3ea;padding:7px;text-align:left;font-size:14px}
+#quote td.n,#quote th.n{text-align:right}
+dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,420px)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.hint{font-size:12px;color:#5b5f85;margin-top:6px}
+@media print{header,nav,.noprint,#tab-chat{display:none!important}body{background:#fff}#quote{box-shadow:none}}
+</style>
 </head>
-<body class="bg-slate-100 font-sans min-h-screen">
+<body>
+<header class="noprint"><h1>🤖 Apna AI Dost</h1><button class="keybtn" id="keyOpen">🔑 API Key</button></header>
+<nav class="noprint">
+  <button class="on" data-t="chat">💬 AI Assistant</button>
+  <button data-t="quote">🧾 Quotation Maker</button>
+</nav>
+<main>
+<section class="tab on" id="tab-chat">
+  <div id="chat"><div class="m b">👋 <b>नमस्ते! मैं आपका Apna AI Dost हूँ।</b><br>व्यापार, एक्सपोर्ट, फ़ोटो या PDF के बारे में कुछ भी पूछिए। पहली बार ऊपर 🔑 API Key दबाकर अपनी key डालिए।</div></div>
+  <div id="att"></div>
+  <div class="bar">
+    <button class="ic" id="camBtn" title="फ़ोटो">📷</button>
+    <button class="ic" id="pdfBtn" title="PDF/फ़ाइल">📁</button>
+    <input type="text" id="msg" placeholder="यहाँ सवाल लिखें…" autocomplete="off">
+    <button class="send" id="sendBtn">➤</button>
+  </div>
+  <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+  <input type="file" id="fileIn" accept="application/pdf,image/*" hidden>
+</section>
 
-    <header class="bg-indigo-700 text-white p-3 shadow flex justify-between items-center">
-        <h1 class="text-lg font-bold"><i class="fa-solid fa-robot text-yellow-300"></i> Apna AI Dost</h1>
-        <button onclick="toggleApiKeyModal()" class="text-xs bg-indigo-900 hover:bg-indigo-800 px-3 py-1 rounded-full border border-indigo-400 font-semibold">
-            <i class="fa-solid fa-key text-yellow-400 mr-1"></i> API Key
-        </button>
-    </header>
+<section class="tab" id="tab-quote">
+  <div class="card noprint">
+    <label>आपकी फ़र्म</label><input class="f" id="qFirm" value="ARVYNZA Naturals Export">
+    <label>संपर्क (फ़ोन / ईमेल)</label><input class="f" id="qContact" value="+91 9079071646 | ak6736422@gmail.com">
+    <label>ग्राहक का नाम</label><input class="f" id="qCust" placeholder="Customer / Buyer name">
+    <label>माल (नाम, मात्रा, दर)</label>
+    <div id="rows"></div>
+    <button class="btn g" id="addRow">+ आइटम जोड़ें</button>
+    <label>GST / टैक्स %</label><input class="f" id="qTax" type="number" value="0" min="0">
+    <label>शर्तें</label><input class="f" id="qTerms" value="Payment: 50% advance, balance before dispatch. Validity: 15 days.">
+    <div class="btns"><button class="btn" id="mkQ">कोटेशन बनाएँ</button></div>
+  </div>
+  <div id="quote" hidden></div>
+  <div class="btns noprint" id="qAct" hidden>
+    <button class="btn" id="qPrint">🖨️ PDF / Print</button>
+    <button class="btn g" id="qCopy">📋 WhatsApp के लिए कॉपी</button>
+  </div>
+</section>
+</main>
 
-    <main class="max-w-md mx-auto p-3">
-        <div id="chat-box" class="chat-container bg-white rounded-xl p-3 overflow-y-auto mb-3 flex flex-col gap-3 shadow-inner">
-            <div class="bg-indigo-50 border p-3 rounded-lg text-xs text-indigo-900">
-                👋 <b>नमस्ते! मैं आपका Apna AI Dost हूँ।</b><br>
-                गूगल वेब ऐप ब्रिज के साथ आपका AI तैयार है! ऊपर **API Key** बटन दबाकर सेटिंग्स भरें।
-            </div>
-        </div>
+<dialog id="dlg">
+  <h3 style="margin:0 0 4px">API Key सेट करें</h3>
+  <label>GEMINI API KEY (AQ… या AIza…)</label>
+  <input class="f" id="keyIn" type="password" placeholder="AQ.Ab… या AIzaSy…" autocomplete="off">
+  <label>मॉडल</label>
+  <input class="f" id="modelIn" placeholder="gemini-3.8-flash">
+  <div class="hint">Key सिर्फ़ आपके फ़ोन के browser में सेव होती है। किसी को दिखाएँ या शेयर न करें।</div>
+  <div class="btns" style="justify-content:flex-end"><button class="btn g" id="keyCancel">रद्द करें</button><button class="btn" id="keySave">सुरक्षित करें</button></div>
+</dialog>
 
-        <div class="bg-white p-2 rounded-xl shadow border flex gap-2">
-            <input type="text" id="user-input" placeholder="यहाँ सवाल लिखें..." class="flex-1 text-sm bg-slate-50 border rounded-lg px-3 py-2 outline-none" onkeypress="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </div>
-    </main>
+<script>
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const SYS="आप 'Apna AI Dost' हैं, एक भारतीय छोटे व्यापारी और एक्सपोर्टर के सहायक। यूज़र जिस भाषा में लिखे (हिंदी, Hinglish या English) उसी में जवाब दें। जवाब सरल, छोटे और काम के हों।";
+let history=[], pending=null;
 
-    <!-- Modal for API & Script URL -->
-    <div id="api-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl max-w-sm w-full p-4 shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                <i class="fa-solid fa-gear text-indigo-600"></i> Google Script & Key सेट करें
-            </h3>
-            <div>
-                <label class="text-[10px] text-slate-500 font-bold block mb-1">GOOGLE SCRIPT WEB APP URL:</label>
-                <input type="text" id="script-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2 border rounded text-xs">
-            </div>
-            <div>
-                <label class="text-[10px] text-slate-500 font-bold block mb-1">GEMINI API KEY (AIzaSy...):</label>
-                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full p-2 border rounded text-xs">
-            </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="toggleApiKeyModal()" class="px-3 py-1.5 text-xs bg-slate-200 rounded">रद्द करें</button>
-                <button onclick="saveSettings()" class="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded font-medium">सुरक्षित करें</button>
-            </div>
-        </div>
-    </div>
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.id==="tab-"+b.dataset.t));
+});
 
-    <script>
-        function toggleApiKeyModal() {
-            const modal = document.getElementById('api-modal');
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-            if(!modal.classList.contains('hidden')) {
-                document.getElementById('script-url-input').value = localStorage.getItem('gas_script_url') || '';
-                document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || '';
-            }
-        }
+const dlg=$("dlg");
+$("keyOpen").onclick=()=>{$("keyIn").value=store.get("gk");$("modelIn").value=store.get("gm")||"gemini-3.8-flash";dlg.showModal()};
+$("keyCancel").onclick=()=>dlg.close();
+$("keySave").onclick=()=>{store.set("gk",$("keyIn").value.trim());store.set("gm",$("modelIn").value.trim()||"gemini-3.8-flash");dlg.close();add("✅ Key सेव हो गई। अब सवाल पूछिए।","b")};
 
-        function saveSettings() {
-            const url = document.getElementById('script-url-input').value.trim();
-            const key = document.getElementById('api-key-input').value.trim();
-            if(url) localStorage.setItem('gas_script_url', url);
-            if(key) localStorage.setItem('gemini_api_key', key);
-            alert('सेटिंग्स सुरक्षित हो गईं!');
-            toggleApiKeyModal();
-        }
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function add(t,cls,html){const d=document.createElement("div");d.className="m "+cls;if(html)d.innerHTML=html;else d.textContent=t;$("chat").appendChild(d);$("chat").scrollTop=1e9;return d}
+function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^\s*\*\s+/gm,"• ")}
 
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const message = input.value.trim();
-            if(!message) return;
+$("camBtn").onclick=()=>$("camIn").click();
+$("pdfBtn").onclick=()=>$("fileIn").click();
+function pick(e){
+  const f=e.target.files[0];if(!f)return;
+  if(f.size>15*1024*1024){add("फ़ाइल 15MB से बड़ी है। छोटी फ़ाइल चुनें।","b err");return}
+  const r=new FileReader();
+  r.onload=()=>{pending={mimeType:f.type||"application/pdf",data:r.result.split(",")[1]};$("att").textContent="📎 "+f.name+" जुड़ गई। अब सवाल लिखकर भेजें।"};
+  r.readAsDataURL(f);e.target.value="";
+}
+$("camIn").onchange=pick;$("fileIn").onchange=pick;
 
-            const scriptUrl = localStorage.getItem('gas_script_url');
-            const apiKey = localStorage.getItem('gemini_api_key');
+async function send(){
+  const text=$("msg").value.trim();
+  if(!text&&!pending)return;
+  const key=store.get("gk");
+  if(!key){add("पहले ऊपर 🔑 API Key दबाकर अपनी key डालिए।","b err");return}
+  const model=store.get("gm")||"gemini-3.8-flash";
+  const parts=[];
+  if(pending)parts.push({inlineData:pending});
+  parts.push({text:text||"इस फ़ाइल/फ़ोटो को समझाइए और ज़रूरी बातें बताइए।"});
+  add((pending?"📎 ":"")+(text||"(फ़ाइल)"),"u");
+  $("msg").value="";pending=null;$("att").textContent="";
+  const wait=add("सोच रहा हूँ…","b");
+  const contents=[...history,{role:"user",parts}];
+  try{
+    const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-goog-api-key":key},
+      body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents})
+    });
+    const j=await res.json();
+    if(!res.ok)throw new Error((j.error&&j.error.message)||("HTTP "+res.status));
+    const reply=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts||[]).map(p=>p.text||"").join("")||"(खाली जवाब मिला)";
+    wait.innerHTML=md(reply);
+    history.push({role:"user",parts:[{text:text||"(फ़ाइल)"}]},{role:"model",parts:[{text:reply}]});
+    history=history.slice(-20);
+  }catch(err){
+    wait.className="m b err";
+    wait.textContent="❌ त्रुटि: "+err.message+(/key|API|auth|permission/i.test(err.message)?"\nKey या मॉडल का नाम जाँचिए (🔑 बटन)।":"");
+  }
+  $("chat").scrollTop=1e9;
+}
+$("sendBtn").onclick=send;
+$("msg").addEventListener("keydown",e=>{if(e.key==="Enter")send()});
 
-            if(!scriptUrl || !apiKey) {
-                alert('कृपया ऊपर API Key बटन दबाकर Script URL और API Key दोनों डालें!');
-                toggleApiKeyModal();
-                return;
-            }
-
-            const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML += `<div class="bg-indigo-600 text-white p-3 rounded-xl max-w-[85%] ml-auto text-sm shadow">${message}</div>`;
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            const loadingId = 'loading-' + Date.now();
-            chatBox.innerHTML += `<div id="${loadingId}" class="bg-slate-200 text-slate-700 p-3 rounded-xl max-w-[85%] mr-auto text-xs flex items-center gap-2">
-                <i class="fa-solid fa-spinner fa-spin text-indigo-600"></i> AI जवाब तैयार कर रहा है...
-            </div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                const response = await fetch(scriptUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ text: message, apiKey: apiKey })
-                });
-
-                const data = await response.json();
-                document.getElementById(loadingId).remove();
-
-                if(data.reply) {
-                    chatBox.innerHTML += `<div class="bg-white border p-3 rounded-xl max-w-[85%] mr-auto text-sm shadow whitespace-pre-wrap">${data.reply}</div>`;
-                } else {
-                    chatBox.innerHTML += `<div class="bg-red-50 text-red-600 p-3 rounded-xl max-w-[85%] mr-auto text-xs border border-red-200">त्रुटि: ${JSON.stringify(data)}</div>`;
-                }
-            } catch(e) {
-                document.getElementById(loadingId).remove();
-                chatBox.innerHTML += `<div class="bg-red-50 text-red-600 p-3 rounded-xl max-w-[85%] mr-auto text-xs border border-red-200">कनेक्शन एरर: ${e.toString()}</div>`;
-            }
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    </script>
+function addRow(n="",q="",r=""){
+  const d=document.createElement("div");d.className="row";
+  d.innerHTML='<input placeholder="माल का नाम" value="'+n+'"><input type="number" placeholder="मात्रा" value="'+q+'"><input type="number" placeholder="दर ₹" value="'+r+'"><button class="ic" style="width:36px;height:38px">✕</button>';
+  d.querySelector("button").onclick=()=>d.remove();
+  $("rows").appendChild(d);
+}
+addRow("Example item (बदलें)",100,250);
+$("addRow").onclick=()=>addRow();
+let qText="";
+$("mkQ").onclick=()=>{
+  const items=[...document.querySelectorAll("#rows .row")].map(r=>{const i=r.querySelectorAll("input");return{n:i[0].value.trim(),q:+i[1].value||0,r:+i[2].value||0}}).filter(x=>x.n);
+  if(!items.length){$("quote").hidden=false;$("quote").textContent="कम से कम एक आइटम जोड़ें।";return}
+  const sub=items.reduce((s,x)=>s+x.q*x.r,0),tp=+$("qTax").value||0,tax=sub*tp/100,tot=sub+tax;
+  const inr=v=>"₹"+v.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const date=new Date().toLocaleDateString("en-IN");
+  const no="Q-"+date.replace(/\//g,"")+"-"+Math.floor(Math.random()*900+100);
+  let h='<h2 style="margin:0">'+esc($("qFirm").value)+'</h2><div>'+esc($("qContact").value)+'</div><hr><b>QUOTATION</b> &nbsp; No: '+no+' &nbsp; Date: '+date+'<br>To: <b>'+esc($("qCust").value||"—")+'</b><table><tr><th>#</th><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr>';
+  items.forEach((x,i)=>{h+='<tr><td>'+(i+1)+'</td><td>'+esc(x.n)+'</td><td class="n">'+x.q+'</td><td class="n">'+inr(x.r)+'</td><td class="n">'+inr(x.q*x.r)+'</td></tr>'});
+  h+='<tr><td colspan="4" class="n">Subtotal</td><td class="n">'+inr(sub)+'</td></tr>';
+  if(tp)h+='<tr><td colspan="4" class="n">Tax ('+tp+'%)</td><td class="n">'+inr(tax)+'</td></tr>';
+  h+='<tr><td colspan="4" class="n"><b>Total</b></td><td class="n"><b>'+inr(tot)+'</b></td></tr></table><div>'+esc($("qTerms").value)+'</div>';
+  $("quote").innerHTML=h;$("quote").hidden=false;$("qAct").hidden=false;
+  qText="*QUOTATION* "+no+"\n"+$("qFirm").value+"\nTo: "+($("qCust").value||"-")+"\nDate: "+date+"\n\n"+items.map((x,i)=>(i+1)+". "+x.n+" - "+x.q+" x "+inr(x.r)+" = "+inr(x.q*x.r)).join("\n")+"\n\nTotal: "+inr(tot)+"\n"+$("qTerms").value;
+  $("quote").scrollIntoView({behavior:"smooth"});
+};
+$("qPrint").onclick=()=>window.print();
+$("qCopy").onclick=async()=>{try{await navigator.clipboard.writeText(qText);$("qCopy").textContent="✅ कॉपी हो गया"}catch(e){$("qCopy").textContent="कॉपी नहीं हुआ"}};
+</script>
 </body>
 </html>
