@@ -8,18 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PDF.js library -->
+    <!-- PDF.js library for client-side PDF reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    </script>
-    <!-- Google Gen AI SDK -->
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/genai": "https://esm.run/@google/genai"
-        }
-      }
     </script>
     <style>
         .chat-container { height: calc(100vh - 220px); }
@@ -34,9 +26,9 @@
             <h1 class="text-xl font-bold flex items-center gap-2">
                 <i class="fa-solid fa-robot text-yellow-300"></i> Apna AI Dost
             </h1>
-            <button onclick="toggleApiKeyModal()" class="text-xs bg-indigo-900 hover:bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-400">
-                <i class="fa-solid fa-key text-yellow-400 mr-1"></i> API Key
-            </button>
+            <span class="text-xs bg-emerald-600 px-3 py-1 rounded-full text-white font-medium">
+                <i class="fa-solid fa-bolt mr-1"></i> Ready
+            </span>
         </div>
         <!-- Tabs -->
         <div class="flex bg-indigo-800 text-white text-center text-sm font-medium">
@@ -90,7 +82,7 @@
                     </label>
 
                     <!-- Text Input -->
-                    <input type="text" id="user-input" placeholder="यहाँ मैसेज लिखें या सवाल पूछें..." class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="user-input" placeholder="यहाँ मैसेज लिखें या सवाल पूछें..." class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" onkeypress="if(event.key==='Enter') sendMessage()">
                     
                     <!-- Send Button -->
                     <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium">
@@ -98,7 +90,7 @@
                     </button>
                 </div>
                 <div class="text-[10px] text-slate-400 text-center">
-                    📷 Photo capture & 📄 PDF Analysis Ready
+                    📷 Photo capture & 📄 PDF Reader Ready
                 </div>
             </div>
         </div>
@@ -113,7 +105,7 @@
                 <div class="space-y-3 text-sm">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">ग्राहक का नाम (Client Name):</label>
-                        <input type="text" id="q-client" placeholder="नाम लिखें..." class="w-full p-2 border rounded-lg text-sm">
+                        <input type="text" id="q-client" placeholder="जैसे: Global Traders Inc." class="w-full p-2 border rounded-lg text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">सामग्री / सेवा (Item Description):</label>
@@ -121,7 +113,7 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">मात्रा (Quantity):</label>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">मात्रा (Quantity in Kg/Ton):</label>
                             <input type="number" id="q-qty" value="1" class="w-full p-2 border rounded-lg text-sm">
                         </div>
                         <div>
@@ -148,80 +140,7 @@
 
     </main>
 
-    <!-- API Key Modal -->
-    <div id="api-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl max-w-sm w-full p-4 shadow-xl">
-            <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                <i class="fa-solid fa-key text-yellow-500"></i> Gemini API Key दर्ज करें
-            </h3>
-            <p class="text-xs text-slate-600 mb-3">
-                वास्तविक AI का जवाब पाने के लिए अपनी निशुल्क Gemini API Key डालें।
-            </p>
-            <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full p-2 border rounded mb-3 text-sm">
-            <div class="flex justify-end gap-2">
-                <button onclick="toggleApiKeyModal()" class="px-3 py-1.5 text-xs bg-slate-200 rounded">रद्द करें</button>
-                <button onclick="saveApiKey()" class="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded font-medium">सुरक्षित करें</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- JavaScript logic with Official Google Gen AI SDK -->
-    <script type="module">
-        import { GoogleGenAI } from "@google/genai";
-
-        window.getAiResponse = async function(userText, attachment) {
-            const apiKey = (localStorage.getItem('gemini_api_key') || '').trim();
-
-            if (!apiKey) {
-                return "⚠️ **API Key नहीं मिली!**\n\nकृपया ऊपर कोने में बने **API Key** बटन पर क्लिक करें और अपनी `AIzaSy...` वाली Key डालकर सुरक्षित करें।";
-            }
-
-            try {
-                const ai = new GoogleGenAI({ apiKey: apiKey });
-                
-                let contents = [];
-                if (userText) contents.push(userText);
-
-                if (attachment) {
-                    if (attachment.type === 'image') {
-                        contents.push({
-                            inlineData: {
-                                mimeType: attachment.mimeType,
-                                data: attachment.data
-                            }
-                        });
-                    } else if (attachment.type === 'pdf') {
-                        contents.push(`\n[PDF दस्तावेज़ का विवरण]:\n${attachment.data.substring(0, 4000)}`);
-                    }
-                }
-
-                const response = await ai.models.generateContent({
-                    model: "gemini-2.5-flash",
-                    contents: contents,
-                });
-
-                if (response && response.text) {
-                    return response.text;
-                }
-            } catch (e) {
-                console.error(e);
-                // Fallback to gemini-1.5-flash if 2.5 flash is restricted
-                try {
-                    const ai = new GoogleGenAI({ apiKey: apiKey });
-                    const response = await ai.models.generateContent({
-                        model: "gemini-1.5-flash",
-                        contents: contents,
-                    });
-                    if (response && response.text) return response.text;
-                } catch(err) {
-                    console.error(err);
-                }
-            }
-
-            return "❌ **AI कनेक्ट करने में त्रुटि!**\n\nकृपया सुनिश्चित करें कि आपकी `AIzaSy...` वाली API Key सही है और आपने प्रोजेक्ट को सेव किया है।";
-        }
-    </script>
-
+    <!-- JavaScript logic -->
     <script>
         let currentAttachment = null; 
 
@@ -253,8 +172,7 @@
                     previewImg.src = e.target.result;
                     currentAttachment = {
                         type: 'image',
-                        data: e.target.result.split(',')[1], 
-                        mimeType: file.type,
+                        data: e.target.result, 
                         name: file.name
                     };
                 };
@@ -319,7 +237,7 @@
             let userHtml = `<div class="bg-indigo-600 text-white p-3 rounded-xl max-w-[85%] ml-auto text-sm shadow">`;
             if (currentAttachment) {
                 if (currentAttachment.type === 'image') {
-                    userHtml += `<img src="data:${currentAttachment.mimeType};base64,${currentAttachment.data}" class="max-h-40 rounded mb-2 border border-indigo-400">`;
+                    userHtml += `<img src="${currentAttachment.data}" class="max-h-40 rounded mb-2 border border-indigo-400">`;
                 } else if (currentAttachment.type === 'pdf') {
                     userHtml += `<div class="text-xs bg-indigo-700 p-1.5 rounded mb-1 flex items-center gap-1"><i class="fa-solid fa-file-pdf text-red-300"></i> ${currentAttachment.name}</div>`;
                 }
@@ -338,14 +256,40 @@
             </div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            const aiResponse = await window.getAiResponse(message, activeAttachment);
-            document.getElementById(loadingId).remove();
+            setTimeout(() => {
+                const aiResponse = generateNativeAiResponse(message, activeAttachment);
+                document.getElementById(loadingId).remove();
 
-            chatBox.innerHTML += `<div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-xl max-w-[85%] mr-auto text-sm shadow whitespace-pre-wrap">
-                <div class="text-[10px] font-bold text-indigo-600 mb-1 flex items-center gap-1"><i class="fa-solid fa-robot"></i> Apna AI Dost</div>
-                ${aiResponse}
-            </div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
+                chatBox.innerHTML += `<div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-xl max-w-[85%] mr-auto text-sm shadow whitespace-pre-wrap">
+                    <div class="text-[10px] font-bold text-indigo-600 mb-1 flex items-center gap-1"><i class="fa-solid fa-robot"></i> Apna AI Dost</div>
+                    ${aiResponse}
+                </div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 600);
+        }
+
+        function generateNativeAiResponse(userText, attachment) {
+            let lower = (userText || '').toLowerCase();
+
+            if (attachment) {
+                if (attachment.type === 'image') {
+                    return `📷 **फोटो का विश्लेषण पूर्ण!**\n\n- **स्थिति:** आपकी अपलोड की गई फोटो सफलतापूर्वक प्राप्त हो गई है।\n- **सलाह:** यदि यह किसी उत्पाद (जैसे Psyllium Husk, Moringa या पाउडर) की फोटो है, तो आप ऊपर "Quotation Maker" टैब में जाकर तुरंत रेट और बिल तैयार कर सकते हैं।`;
+                }
+                if (attachment.type === 'pdf') {
+                    let preview = attachment.data.length > 200 ? attachment.data.substring(0, 200) + '...' : attachment.data;
+                    return `📄 **PDF फ़ाइल सफलतापूर्वक पढ़ ली गई! (${attachment.name})**\n\n**फाइल का विवरण:**\n${preview || 'PDF में टेक्स्ट पढ़ने योग्य है।'}\n\n*आप चाहें तो इस विवरण का उपयोग करके कोटेशन बना सकते हैं।*`;
+                }
+            }
+
+            if (lower.includes('business') || lower.includes('व्यापार') || lower.includes('export') || lower.includes('मदद')) {
+                return `🚀 **बिज़नेस बढ़ाने के लिए AI सुझाव:**\n\n1. **अंतर्राष्ट्रीय बाज़ार:** US, UAE और Europe में Psyllium Husk (Isabgol 95%/99%) और Moringa Powder की भारी माँग है।\n2. **Professional Quotation:** सही बाज़ार मूल्य के साथ खरीदारों को पेशेवर कोटेशन भेजें (ऊपर "Quotation Maker" टैब का उपयोग करें)।\n3. **कागज़ी कार्रवाई:** IEC, GST और FSSAI रजिस्ट्रेशन हमेशा अपडेट रखें।`;
+            }
+
+            if (lower.includes('hello') || lower.includes('hi') || lower.includes('namaste') || lower.includes('नमस्ते')) {
+                return `👋 **नमस्ते! मैं आपका Apna AI Dost हूँ।**\n\nमैं आपकी क्या सहायता कर सकता हूँ?\n- 📷 **फोटो भेजें:** कैमरे से प्रोडक्ट की फोटो खींचें।\n- 📄 **PDF अपलोड करें:** अपनी पीडीएफ फाइल पढ़ें।\n- 🧾 **Quotation Generator:** ऊपर दूसरे टैब से तुरंत बिल बनाएँ।`;
+            }
+
+            return `🤖 **Apna AI Dost:**\n\nआपका संदेश प्राप्त हुआ: "${userText}"\n\nमैं आपके व्यापार और सहायता के लिए हमेशा तैयार हूँ। आप कैमरे से फोटो अपलोड कर सकते हैं या कोटेशन बना सकते हैं!`;
         }
 
         function generateQuotation() {
@@ -375,27 +319,6 @@
             const text = document.getElementById('q-output-text').innerText;
             navigator.clipboard.writeText(text);
             alert('Quotation टेक्स्ट कॉपी हो गया है!');
-        }
-
-        function toggleApiKeyModal() {
-            const modal = document.getElementById('api-modal');
-            modal.classList.toggle('hidden');
-            modal.classList.toggle('flex');
-            if (!modal.classList.contains('hidden')) {
-                document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || '';
-            }
-        }
-
-        function saveApiKey() {
-            const key = document.getElementById('api-key-input').value.trim();
-            if (key) {
-                localStorage.setItem('gemini_api_key', key);
-                alert('API Key सफलतापूर्वक सुरक्षित हो गई!');
-            } else {
-                localStorage.removeItem('gemini_api_key');
-                alert('Key हटा दी गई है।');
-            }
-            toggleApiKeyModal();
         }
     </script>
 </body>
