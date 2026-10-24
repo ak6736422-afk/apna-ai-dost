@@ -50,7 +50,7 @@
             <div id="chat-box" class="chat-container bg-white rounded-xl shadow-inner p-3 overflow-y-auto mb-3 flex flex-col gap-3">
                 <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-lg text-xs text-indigo-900">
                     👋 <b>नमस्ते! मैं आपका Apna AI Dost हूँ।</b><br>
-                    आप मुझसे सवाल पूछ सकते हैं, कैमरा से फ़ोटो खींचकर भेज सकते हैं, या PDF अपलोड करके सवाल पूछ सकते हैं।
+                    आप मुझसे व्यापार, एक्सपोर्ट, फ़ोटो या PDF के बारे में सवाल पूछ सकते हैं।
                 </div>
             </div>
 
@@ -147,7 +147,7 @@
                 <i class="fa-solid fa-key text-yellow-500"></i> Gemini API Key दर्ज करें
             </h3>
             <p class="text-xs text-slate-600 mb-3">
-                यदि आपके पास अपनी API Key है तो डालें, या फिर इसे खाली रखकर भी ऐप का इस्तेमाल करें।
+                वास्तविक AI का जवाब पाने के लिए अपनी निशुल्क Gemini API Key डालें।
             </p>
             <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full p-2 border rounded mb-3 text-sm">
             <div class="flex justify-end gap-2">
@@ -284,28 +284,37 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Resilient AI Response Handler with Smart Assistant Fallback
         async function getAiResponse(userText, attachment) {
             const apiKey = (localStorage.getItem('gemini_api_key') || '').trim();
 
-            if (apiKey && apiKey.startsWith('AIzaSy')) {
-                let parts = [];
-                if (userText) parts.push({ text: userText });
+            if (!apiKey) {
+                return "⚠️ **API Key नहीं मिली!**\n\nकृपया ऊपर कोने में बने **API Key** बटन पर क्लिक करें और अपनी `AIzaSy...` वाली Key डालकर सुरक्षित करें।";
+            }
 
-                if (attachment) {
-                    if (attachment.type === 'image') {
-                        parts.push({
-                            inline_data: { mime_type: attachment.mimeType, data: attachment.data }
-                        });
-                    } else if (attachment.type === 'pdf') {
-                        parts.push({
-                            text: `[अटैच की गई PDF का विवरण]:\n${attachment.data.substring(0, 4000)}`
-                        });
-                    }
+            let parts = [];
+            if (userText) parts.push({ text: userText });
+
+            if (attachment) {
+                if (attachment.type === 'image') {
+                    parts.push({
+                        inline_data: { mime_type: attachment.mimeType, data: attachment.data }
+                    });
+                } else if (attachment.type === 'pdf') {
+                    parts.push({
+                        text: `[अटैच की गई PDF का विवरण]:\n${attachment.data.substring(0, 4000)}`
+                    });
                 }
+            }
 
+            // Auto-try multiple Google Gemini Endpoints
+            const endpoints = [
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`
+            ];
+
+            for (let url of endpoints) {
                 try {
-                    let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -313,38 +322,15 @@
                     });
 
                     const data = await response.json();
-                    if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    if (data.candidates && data.candidates[0] && data.candidates[0].content.parts[0].text) {
                         return data.candidates[0].content.parts[0].text;
                     }
                 } catch (e) {
-                    console.log("Direct API Call blocked, using assistant fallback.");
+                    console.log("Retrying next endpoint...");
                 }
             }
 
-            // Smart Assistant Fallback Mode (Runs smooth without blocking errors)
-            return getSmartAssistantResponse(userText, attachment);
-        }
-
-        function getSmartAssistantResponse(text, attachment) {
-            let lower = (text || '').toLowerCase();
-            
-            if (attachment && attachment.type === 'image') {
-                return `📷 **फ़ोटो सफलतापूर्वक प्राप्त हुई!**\n\nआपकी अपलोड की गई फोटो का विश्लेषण कर लिया गया है। फोटो में वस्तु/दस्तावेज़ साफ़ दिखाई दे रहा है। यदि आप इससे संबंधित एक्सपोर्ट या कोटेशन की जानकारी चाहते हैं तो "Quotation Maker" टैब का उपयोग कर सकते हैं।`;
-            }
-
-            if (attachment && attachment.type === 'pdf') {
-                return `📄 **PDF फ़ाइल सफलतापूर्वक पढ़ी गई (${attachment.name})!**\n\n**प्राप्त टेक्स्ट का सारांश:**\n${attachment.data.substring(0, 300)}...\n\n*आपका दस्तावेज़ पूरी तरह सुरक्षित है और कोटेशन बनाने के लिए तैयार है।*`;
-            }
-
-            if (lower.includes('namaste') || lower.includes('hello') || lower.includes('hi')) {
-                return `👋 **नमस्ते! मैं आपका Apna AI Dost हूँ।**\n\nमैं आपकी क्या सहायता कर सकता हूँ?\n- 📷 **फोटो भेजें:** कैमरे से फोटो खींचकर एनालिसिस करें।\n- 📄 **PDF अपलोड करें:** अपनी पीडीएफ फ़ाइल पढ़ें।\n- 🧾 **Quotation Maker:** ऊपर दूसरे टैब में जाकर तुरंत नया कोटेशन बनाएँ।`;
-            }
-
-            if (lower.includes('price') || lower.includes('rate') || lower.includes('quotation') || lower.includes('daam')) {
-                return `💡 **कोटेशन की जानकारी:**\n\nकोटेशन बनाने के लिए ऊपर दिए गए **"Quotation Maker"** वाले टैब पर क्लिक करें। वहाँ आप ग्राहक का नाम, सामग्री (जैसे Psyllium Husk / Moringa), मात्रा और दर डालकर 1-क्लिक में प्रोफेशनल कोटेशन तैयार कर सकते हैं!`;
-            }
-
-            return `🤖 **Apna AI Dost:**\n\nआपका संदेश प्राप्त हुआ: "${text || 'फ़ाइल का विवरण'}"\n\nमैं आपकी सहायता के लिए तैयार हूँ। आप कैमरा बटन से फोटो ले सकते हैं या Quotation Maker से बिल/कोटेशन जेनरेट कर सकते हैं।`;
+            return "❌ **AI कनेक्ट करने में त्रुटि!**\n\nकृपया सुनिश्चित करें कि आपकी `AIzaSy...` वाली API Key सही है।";
         }
 
         function generateQuotation() {
@@ -399,5 +385,3 @@
     </script>
 </body>
 </html>
-
-       
