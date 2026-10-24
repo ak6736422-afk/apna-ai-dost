@@ -8,10 +8,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PDF.js library for client-side PDF reading -->
+    <!-- PDF.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    <!-- Google Gen AI SDK -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.run/@google/genai"
+        }
+      }
     </script>
     <style>
         .chat-container { height: calc(100vh - 220px); }
@@ -157,7 +165,63 @@
         </div>
     </div>
 
-    <!-- JavaScript logic -->
+    <!-- JavaScript logic with Official Google Gen AI SDK -->
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        window.getAiResponse = async function(userText, attachment) {
+            const apiKey = (localStorage.getItem('gemini_api_key') || '').trim();
+
+            if (!apiKey) {
+                return "⚠️ **API Key नहीं मिली!**\n\nकृपया ऊपर कोने में बने **API Key** बटन पर क्लिक करें और अपनी `AIzaSy...` वाली Key डालकर सुरक्षित करें।";
+            }
+
+            try {
+                const ai = new GoogleGenAI({ apiKey: apiKey });
+                
+                let contents = [];
+                if (userText) contents.push(userText);
+
+                if (attachment) {
+                    if (attachment.type === 'image') {
+                        contents.push({
+                            inlineData: {
+                                mimeType: attachment.mimeType,
+                                data: attachment.data
+                            }
+                        });
+                    } else if (attachment.type === 'pdf') {
+                        contents.push(`\n[PDF दस्तावेज़ का विवरण]:\n${attachment.data.substring(0, 4000)}`);
+                    }
+                }
+
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: contents,
+                });
+
+                if (response && response.text) {
+                    return response.text;
+                }
+            } catch (e) {
+                console.error(e);
+                // Fallback to gemini-1.5-flash if 2.5 flash is restricted
+                try {
+                    const ai = new GoogleGenAI({ apiKey: apiKey });
+                    const response = await ai.models.generateContent({
+                        model: "gemini-1.5-flash",
+                        contents: contents,
+                    });
+                    if (response && response.text) return response.text;
+                } catch(err) {
+                    console.error(err);
+                }
+            }
+
+            return "❌ **AI कनेक्ट करने में त्रुटि!**\n\nकृपया सुनिश्चित करें कि आपकी `AIzaSy...` वाली API Key सही है और आपने प्रोजेक्ट को सेव किया है।";
+        }
+    </script>
+
     <script>
         let currentAttachment = null; 
 
@@ -274,7 +338,7 @@
             </div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            const aiResponse = await getAiResponse(message, activeAttachment);
+            const aiResponse = await window.getAiResponse(message, activeAttachment);
             document.getElementById(loadingId).remove();
 
             chatBox.innerHTML += `<div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-xl max-w-[85%] mr-auto text-sm shadow whitespace-pre-wrap">
@@ -282,55 +346,6 @@
                 ${aiResponse}
             </div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        async function getAiResponse(userText, attachment) {
-            const apiKey = (localStorage.getItem('gemini_api_key') || '').trim();
-
-            if (!apiKey) {
-                return "⚠️ **API Key नहीं मिली!**\n\nकृपया ऊपर कोने में बने **API Key** बटन पर क्लिक करें और अपनी `AIzaSy...` वाली Key डालकर सुरक्षित करें।";
-            }
-
-            let parts = [];
-            if (userText) parts.push({ text: userText });
-
-            if (attachment) {
-                if (attachment.type === 'image') {
-                    parts.push({
-                        inline_data: { mime_type: attachment.mimeType, data: attachment.data }
-                    });
-                } else if (attachment.type === 'pdf') {
-                    parts.push({
-                        text: `[अटैच की गई PDF का विवरण]:\n${attachment.data.substring(0, 4000)}`
-                    });
-                }
-            }
-
-            // Auto-try multiple Google Gemini Endpoints
-            const endpoints = [
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`
-            ];
-
-            for (let url of endpoints) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts }] })
-                    });
-
-                    const data = await response.json();
-                    if (data.candidates && data.candidates[0] && data.candidates[0].content.parts[0].text) {
-                        return data.candidates[0].content.parts[0].text;
-                    }
-                } catch (e) {
-                    console.log("Retrying next endpoint...");
-                }
-            }
-
-            return "❌ **AI कनेक्ट करने में त्रुटि!**\n\nकृपया सुनिश्चित करें कि आपकी `AIzaSy...` वाली API Key सही है।";
         }
 
         function generateQuotation() {
