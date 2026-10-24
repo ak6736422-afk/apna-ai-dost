@@ -1,94 +1,409 @@
 
-<!DOCTYPE html>
-<html lang="en">
+     <!DOCTYPE html>
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apna AI Dost</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js library for client-side PDF reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .top-bar { width: 100%; max-width: 500px; margin-bottom: 12px; display: flex; justify-content: flex-end; }
-        .tool-btn { background-color: #16a34a; color: #ffffff; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
-        .chat-container { width: 100%; max-width: 500px; height: 75vh; background-color: #1e293b; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #334155; }
-        .chat-header { background-color: #0284c7; color: #ffffff; padding: 16px 20px; text-align: center; font-size: 1.2rem; font-weight: 600; }
-        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; }
-        .bot-message { background-color: #334155; color: #f8fafc; align-self: flex-start; }
-        .user-message { background-color: #0284c7; color: #ffffff; align-self: flex-end; }
-        .input-area { display: flex; padding: 12px; background-color: #0f172a; gap: 10px; border-top: 1px solid #334155; }
-        .input-area input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #334155; background-color: #1e293b; color: #ffffff; outline: none; }
-        .input-area button { background-color: #0284c7; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .chat-container { height: calc(100vh - 220px); }
+        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: bold; }
     </style>
 </head>
-<body>
-    <div class="top-bar">
-        <a href="quotation.html" class="tool-btn">📄 Quotation Maker</a>
+<body class="bg-slate-100 font-sans min-h-screen">
+
+    <!-- Header Navigation -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-robot text-yellow-300"></i> Apna AI Dost
+            </h1>
+            <button onclick="toggleApiKeyModal()" class="text-xs bg-indigo-900 hover:bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-400">
+                <i class="fa-solid fa-key text-yellow-400 mr-1"></i> API Key
+            </button>
+        </div>
+        <!-- Tabs -->
+        <div class="flex bg-indigo-800 text-white text-center text-sm font-medium">
+            <button onclick="switchTab('chat')" id="tab-chat" class="tab-btn active flex-1 py-2 bg-indigo-900">
+                <i class="fa-solid fa-comments mr-1"></i> AI Assistant & Media
+            </button>
+            <button onclick="switchTab('quotation')" id="tab-quotation" class="tab-btn flex-1 py-2">
+                <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Quotation Maker
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto p-3">
+
+        <!-- TAB 1: AI Chatbot + Camera + PDF Feature -->
+        <div id="view-chat" class="block">
+            <!-- Chat Container -->
+            <div id="chat-box" class="chat-container bg-white rounded-xl shadow-inner p-3 overflow-y-auto mb-3 flex flex-col gap-3">
+                <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-lg text-xs text-indigo-900">
+                    👋 <b>नमस्ते! मैं आपका Apna AI Dost हूँ।</b><br>
+                    आप मुझसे सवाल पूछ सकते हैं, कैमरा से फ़ोटो खींचकर विश्लेषण करा सकते हैं, या PDF अपलोड करके सवाल पूछ सकते हैं।
+                </div>
+            </div>
+
+            <!-- Selected Attachment Preview Box -->
+            <div id="attachment-preview" class="hidden bg-slate-200 p-2 rounded-lg mb-2 flex items-center justify-between">
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <img id="preview-img" class="w-12 h-12 object-cover rounded hidden" alt="Preview">
+                    <i id="preview-pdf-icon" class="fa-solid fa-file-pdf text-red-600 text-2xl hidden"></i>
+                    <span id="preview-text" class="text-xs text-slate-700 truncate max-w-[200px]"></span>
+                </div>
+                <button onclick="clearAttachment()" class="text-red-600 hover:text-red-800 p-1">
+                    <i class="fa-solid fa-circle-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Input Form & Media Buttons -->
+            <div class="bg-white p-2 rounded-xl shadow border border-slate-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <!-- Camera Button -->
+                    <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-lg flex items-center justify-center border border-slate-300">
+                        <i class="fa-solid fa-camera text-indigo-600 text-lg"></i>
+                        <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event, 'image')">
+                    </label>
+
+                    <!-- Gallery & PDF Upload Button -->
+                    <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-lg flex items-center justify-center border border-slate-300">
+                        <i class="fa-solid fa-folder-open text-amber-600 text-lg"></i>
+                        <input type="file" id="file-input" accept="image/*,application/pdf" class="hidden" onchange="handleFileSelect(event, 'file')">
+                    </label>
+
+                    <!-- Text Input -->
+                    <input type="text" id="user-input" placeholder="यहाँ मैसेज लिखें या सवाल पूछें..." class="flex-1 text-sm bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    
+                    <!-- Send Button -->
+                    <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="text-[10px] text-slate-400 text-center">
+                    📷 Photo capture & 📄 PDF Analysis ready
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Quotation Maker -->
+        <div id="view-quotation" class="hidden">
+            <div class="bg-white p-4 rounded-xl shadow border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 mb-3 border-b pb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-receipt text-indigo-600"></i> Quotation Generator
+                </h2>
+                
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ग्राहक का नाम (Client Name):</label>
+                        <input type="text" id="q-client" placeholder="नाम लिखें..." class="w-full p-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">सामग्री / सेवा (Item Description):</label>
+                        <input type="text" id="q-item" placeholder="जैसे: Export Quality Psyllium Husk 99%" class="w-full p-2 border rounded-lg text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">मात्रा (Quantity):</label>
+                            <input type="number" id="q-qty" value="1" class="w-full p-2 border rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">दर / मूल्य (Rate in ₹):</label>
+                            <input type="number" id="q-rate" placeholder="0.00" class="w-full p-2 border rounded-lg text-sm">
+                        </div>
+                    </div>
+                    
+                    <button onclick="generateQuotation()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-bold mt-2 shadow">
+                        <i class="fa-solid fa-file-pdf mr-1"></i> Quotation बनाएँ
+                    </button>
+                </div>
+
+                <!-- Quotation Result Box -->
+                <div id="quotation-result" class="hidden mt-4 p-3 bg-slate-50 border border-slate-300 rounded-lg text-xs">
+                    <h3 class="font-bold text-slate-700 border-b pb-1 mb-2 text-center">QUOTATION / INVOICE DRAFT</h3>
+                    <div id="q-output-text" class="whitespace-pre-wrap font-mono"></div>
+                    <button onclick="copyQuotation()" class="mt-3 w-full bg-slate-800 text-white py-1.5 rounded text-xs font-medium">
+                        <i class="fa-solid fa-copy mr-1"></i> Text कॉपी करें
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- API Key Modal -->
+    <div id="api-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-sm w-full p-4 shadow-xl">
+            <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-key text-yellow-500"></i> Gemini API Key दर्ज करें
+            </h3>
+            <p class="text-xs text-slate-600 mb-3">
+                वास्तविक AI का जवाब पाने के लिए अपनी निशुल्क Gemini API Key डालें। यह कुंजी आपके फ़ोन में ही सुरक्षित रहेगी।
+            </p>
+            <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full p-2 border rounded mb-3 text-sm">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleApiKeyModal()" class="px-3 py-1.5 text-xs bg-slate-200 rounded">रद्द करें</button>
+                <button onclick="saveApiKey()" class="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded font-medium">सुरक्षित करें</button>
+            </div>
+        </div>
     </div>
 
-    <div class="chat-container">
-        <div class="chat-header">Apna AI Dost</div>
-        <div class="chat-box" id="chatBox">
-            <div class="message bot-message">Namaste! Main aapka Apna AI Dost hoon. Main aapki kya madad kar sakta hoon?</div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Apna message likhein..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Bhejen</button>
-        </div>
-    </div>
-
+    <!-- JavaScript logic -->
     <script>
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
+        let currentAttachment = null; // { type: 'image' | 'pdf', data: base64 | text, name: string }
+
+        // Switch Tabs
+        function switchTab(tab) {
+            document.getElementById('view-chat').classList.toggle('hidden', tab !== 'chat');
+            document.getElementById('view-quotation').classList.toggle('hidden', tab !== 'quotation');
+            document.getElementById('tab-chat').classList.toggle('active', tab === 'chat');
+            document.getElementById('tab-quotation').classList.toggle('active', tab === 'quotation');
         }
 
-        function getBotResponse(msg) {
-            let text = msg.toLowerCase();
-            
-            if (text.includes("hi") || text.includes("hello") || text.includes("namaste")) {
-                return "Namaste! Aap kaise hain? Main aapki business ya coding mein kya madad kar sakta hoon?";
-            } else if (text.includes("good morning") || text.includes("morning")) {
-                return "Good Morning! Aapka din shubh ho. Aaj kya khas kaam kar rahe hain?";
-            } else if (text.includes("business") || text.includes("vyapar") || text.includes("kaam") || text.includes("madad")) {
-                return "Haan bilkul! Main aapke business, export, quotation maker aur marketing mein poori madad kar sakta hoon. Aap apna sawal puchein!";
-            } else if (text.includes("quotation") || text.includes("bill") || text.includes("rate")) {
-                return "Aap upar diye gaye '📄 Quotation Maker' button par click karke aasani se quotation ya bill bana sakte hain!";
-            } else if (text.includes("kaise ho") || text.includes("kaisa hai")) {
-                return "Main bilkul badhiya hoon! Aap batayein, aapka kaam kaisa chal raha hai?";
-            } else if (text.includes("thanks") || text.includes("dhanyawad") || text.includes("shukriya")) {
-                return "Aapka bahut bahut swagat hai! Mujhase kabhi bhi sawal pooch sakte hain.";
+        // Handle File Selection (Camera / Gallery / PDF)
+        async function handleFileSelect(event, source) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const previewBox = document.getElementById('attachment-preview');
+            const previewImg = document.getElementById('preview-img');
+            const previewPdfIcon = document.getElementById('preview-pdf-icon');
+            const previewText = document.getElementById('preview-text');
+
+            previewBox.classList.remove('hidden');
+            previewText.innerText = file.name;
+
+            if (file.type.startsWith('image/')) {
+                previewPdfIcon.classList.add('hidden');
+                previewImg.classList.remove('hidden');
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    currentAttachment = {
+                        type: 'image',
+                        data: e.target.result.split(',')[1], // Base64 data
+                        mimeType: file.type,
+                        name: file.name
+                    };
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                previewImg.classList.add('hidden');
+                previewPdfIcon.classList.remove('hidden');
+                
+                previewText.innerText = `PDF पढ़ा जा रहा है... (${file.name})`;
+                try {
+                    const pdfText = await extractPdfText(file);
+                    currentAttachment = {
+                        type: 'pdf',
+                        data: pdfText,
+                        name: file.name
+                    };
+                    previewText.innerText = `PDF तैयार है: ${file.name}`;
+                } catch (err) {
+                    alert('PDF फ़ाइल पढ़ने में त्रुटि हुई।');
+                    clearAttachment();
+                }
             } else {
-                return "Bahut achha sawal hai! Main is par aapki poori madad karne ke liye tayar hoon. Batayein isme aapko kya jaankari chahiye?";
+                alert('कृपया केवल इमेज या PDF फ़ाइल चुनें।');
+                clearAttachment();
             }
         }
 
-        function sendMessage() {
-            let input = document.getElementById("userInput");
-            let message = input.value.trim();
-            if (message !== "") {
-                let chatBox = document.getElementById("chatBox");
-                
-                // Add User Message
-                let userDiv = document.createElement("div");
-                userDiv.className = "message user-message";
-                userDiv.innerText = message;
-                chatBox.appendChild(userDiv);
-                
-                input.value = "";
-                chatBox.scrollTop = chatBox.scrollHeight;
-                
-                // Add AI Smart Response
-                setTimeout(() => {
-                    let botDiv = document.createElement("div");
-                    botDiv.className = "message bot-message";
-                    botDiv.innerText = getBotResponse(message);
-                    chatBox.appendChild(botDiv);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }, 800);
+        // Client-side PDF Text Extraction
+        function extractPdfText(file) {
+            return new Promise((resolve, reject) => {
+                const fileReader = new FileReader();
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(async function(pdf) {
+                        let fullText = '';
+                        for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) { // Extract up to 10 pages
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(' ');
+                            fullText += `\n--- Page ${i} ---\n` + pageText;
+                        }
+                        resolve(fullText);
+                    }).catch(reject);
+                };
+                fileReader.readAsArrayBuffer(file);
+            });
+        }
+
+        function clearAttachment() {
+            currentAttachment = null;
+            document.getElementById('attachment-preview').classList.add('hidden');
+            document.getElementById('camera-input').value = '';
+            document.getElementById('file-input').value = '';
+        }
+
+        // Send Message & AI Processing
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (!message && !currentAttachment) return;
+
+            const chatBox = document.getElementById('chat-box');
+
+            // User Message UI
+            let userHtml = `<div class="bg-indigo-600 text-white p-3 rounded-xl max-w-[85%] ml-auto text-sm shadow">`;
+            if (currentAttachment) {
+                if (currentAttachment.type === 'image') {
+                    userHtml += `<img src="data:${currentAttachment.mimeType};base64,${currentAttachment.data}" class="max-h-40 rounded mb-2 border border-indigo-400">`;
+                } else if (currentAttachment.type === 'pdf') {
+                    userHtml += `<div class="text-xs bg-indigo-700 p-1.5 rounded mb-1 flex items-center gap-1"><i class="fa-solid fa-file-pdf text-red-300"></i> ${currentAttachment.name}</div>`;
+                }
             }
+            userHtml += `<span>${message || 'फ़ाइल का विश्लेषण करें'}</span></div>`;
+            chatBox.innerHTML += userHtml;
+
+            const activeAttachment = currentAttachment;
+            input.value = '';
+            clearAttachment();
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Loading Indicator
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div id="${loadingId}" class="bg-slate-200 text-slate-700 p-3 rounded-xl max-w-[85%] mr-auto text-xs flex items-center gap-2 shadow">
+                <i class="fa-solid fa-spinner fa-spin text-indigo-600"></i> AI सोच रहा है...
+            </div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Call AI Response
+            const aiResponse = await getAiResponse(message, activeAttachment);
+            document.getElementById(loadingId).remove();
+
+            // AI Message UI
+            chatBox.innerHTML += `<div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-xl max-w-[85%] mr-auto text-sm shadow whitespace-pre-wrap">
+                <div class="text-[10px] font-bold text-indigo-600 mb-1 flex items-center gap-1"><i class="fa-solid fa-robot"></i> Apna AI Dost</div>
+                ${aiResponse}
+            </div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Gemini API Integration or Fallback
+        async function getAiResponse(userText, attachment) {
+            const apiKey = localStorage.getItem('gemini_api_key');
+
+            if (!apiKey) {
+                // Mock Smart Fallback if API key is not provided
+                return getMockResponse(userText, attachment);
+            }
+
+            try {
+                let contents = [];
+                let parts = [];
+
+                if (userText) parts.push({ text: userText });
+
+                if (attachment) {
+                    if (attachment.type === 'image') {
+                        parts.push({
+                            inline_data: {
+                                mime_type: attachment.mimeType,
+                                data: attachment.data
+                            }
+                        });
+                    } else if (attachment.type === 'pdf') {
+                        parts.push({
+                            text: `[अटैच की गई PDF फ़ाइल का विवरण]:\n${attachment.data.substring(0, 4000)}`
+                        });
+                    }
+                }
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts }] })
+                });
+
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    return "क्षमा करें, AI उत्तर प्राप्त करने में समस्या हुई। कृपया API कुंजी जाँचें।";
+                }
+            } catch (err) {
+                return "कनेक्शन त्रुटि: API कॉल विफल रहा। नेटवर्क जाँचें।";
+            }
+        }
+
+        // Fallback Mock Responses for Demo/Testing
+        function getMockResponse(text, attachment) {
+            if (attachment && attachment.type === 'image') {
+                return "📷 **फोटो प्राप्त हुई!**\n(नोट: वास्तविक AI जवाब के लिए ऊपर दिए गए 'API Key' बटन पर अपनी निशुल्क Gemini API Key जोड़ें।)\n\nइस फ़ोटो का विश्लेषण करने पर यह सामग्री या उत्पाद की तस्वीर प्रतीत होती है।";
+            }
+            if (attachment && attachment.type === 'pdf') {
+                return `📄 **PDF फ़ाइल सफलतापूर्वक पढ़ी गई (${attachment.name})!**\n\n**प्राप्त मुख्य अंश:**\n${attachment.data.substring(0, 150)}...\n\n(वास्तविक AI विश्लेषण के लिए अपनी API Key दर्ज करें)`;
+            }
+            return `🤖 **Apna AI Dost:**\nआपका संदेश प्राप्त हुआ: "${text}"\n\n(वास्तविक AI उत्तरों के लिए अपनी Gemini API Key ऊपर सेट करें।)`;
+        }
+
+        // Quotation Maker Logic
+        function generateQuotation() {
+            const client = document.getElementById('q-client').value || 'मान्य ग्राहक';
+            const item = document.getElementById('q-item').value || 'उत्पाद / सेवा';
+            const qty = parseFloat(document.getElementById('q-qty').value) || 1;
+            const rate = parseFloat(document.getElementById('q-rate').value) || 0;
+            const total = qty * rate;
+
+            const invoiceText = `============== QUOTATION ==============
+दिनांक: ${new Date().toLocaleDateString('hi-IN')}
+ग्राहक का नाम: ${client}
+----------------------------------------
+विवरण: ${item}
+मात्रा (Qty): ${qty}
+दर (Rate): ₹${rate.toFixed(2)}
+----------------------------------------
+कुल राशि (Total): ₹${total.toFixed(2)}
+========================================
+धन्यवाद! (ARVYNZA Naturals Export / Apna AI)`;
+
+            document.getElementById('q-output-text').innerText = invoiceText;
+            document.getElementById('quotation-result').classList.remove('hidden');
+        }
+
+        function copyQuotation() {
+            const text = document.getElementById('q-output-text').innerText;
+            navigator.clipboard.writeText(text);
+            alert('Quotation टेक्स्ट कॉपी हो गया है!');
+        }
+
+        // API Key Modal Controls
+        function toggleApiKeyModal() {
+            const modal = document.getElementById('api-modal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || '';
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                alert('API Key सफलतापूर्वक सुरक्षित हो गई!');
+            } else {
+                localStorage.removeItem('gemini_api_key');
+                alert('API Key हटा दी गई है। अब ऐप डेमो/मॉक मोड में काम करेगा।');
+            }
+            toggleApiKeyModal();
         }
     </script>
 </body>
 </html>
+   
+
